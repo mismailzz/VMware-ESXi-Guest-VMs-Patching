@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  gather_facts: no
+  
+  vars_files:
+   - variablefile
+   - patchCommand.yml
+
+  tasks:
+    - name: Gather all registered virtual machines
+      community.vmware.vmware_vm_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        vm_type: vm
+        validate_certs: no
+      delegate_to: localhost
+      register: vminfo
+             
+    - name: Execute the targeted commands - CLEAN/LIST REPO/UPDATE
+      community.vmware.vmware_vm_shell:
+       hostname: "{{ esxi_hostname }}"
+       username: "{{ esxi_username }}"
+       password: "{{ esxi_password }}"
+       validate_certs: no
+       vm_id: "{{ item[0].guest_name }}"
+       vm_username: "{{ guestvm_username }}"
+       vm_password: "{{ guestvm_password }}"
+       wait_for_process: True
+       vm_shell: "{{ vm_shellcommand_yum }}"
+       vm_shell_args: "{{ item[1] }}"
+      when: (item[0].power_state == "poweredOn") and (item[0].guest_fullname is match("Red Hat*")) and (item[0].guest_name in vm_toPatched)
+      with_nested:
+       - "{{ vminfo.virtual_machines }}"
+       - "{{ run_commands }}"
+      delegate_to: localhost
+      register: result
+      

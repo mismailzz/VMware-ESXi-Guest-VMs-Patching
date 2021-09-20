@@ -1,0 +1,4 @@
+run_commands:
+ - "clean all > out.log"
+ - "repolist >> out.log"
+ - "--disablerepo=* --enablerepo=sv5* --exclude=puppet* update -y >> out.log 2>&1"

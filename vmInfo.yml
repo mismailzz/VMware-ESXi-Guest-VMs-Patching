@@ -1,0 +1,50 @@
+- name: Get Virtual Machines Information 
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+   - variablefile 
+
+  tasks:
+    - name: Gather all registered virtual machines
+      community.vmware.vmware_vm_info:
+        hostname: "{{esxi_hostname}}"
+        username: "{{esxi_username}}"
+        password: "{{esxi_password}}"
+        vm_type: vm
+        validate_certs: no
+
+      delegate_to: localhost
+      register: vminfo
+    
+    - name: Delete the existing vmInventory file for new info
+      file:
+       state: absent
+       path: vmInventory
+    
+    - name: Create new vmInventory file for new info
+      file:
+       state: touch
+       path: vmInventory
+       
+    - name: Insert/Update 
+      blockinfile:
+       path: vmInventory
+       marker: ""
+       insertafter: EOF
+       block: |
+         "{{ item.ip_address }} : {{item.guest_name}} : {{item.guest_fullname}}"
+      when: (item.power_state == "poweredOn")
+      loop: "{{ vminfo.virtual_machines }}"
+    
+    - name: Clean file with empty \n and "
+      replace:
+       dest: vmInventory
+       regexp: '(^\s*$|\n|")'
+       replace: ''
+   
+    - name: Remove blank lines blockinfile
+      lineinfile :
+       path: vmInventory
+       state: absent
+       regexp: '^$'
+
