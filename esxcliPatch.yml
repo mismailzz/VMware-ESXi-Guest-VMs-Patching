@@ -1,0 +1,21 @@
+---
+- hosts: ismail
+  remote_user: "root"
+  gather_facts: no
+  vars_files:
+   - hypervisorVariable
+  vars:
+   validate_certs: no
+  tasks:
+   - name: Run the shell command
+     shell: "esxcli software sources profile list -d /vmfs/volumes/datastore1/{{ patched_file }} | awk 'NR>2 {print $1}' "
+     register: profile_res
+     failed_when: profile_res.stdout_lines | count != 1
+     changed_when: false
+   - debug:
+      var: profile_res.stdout_lines
+   - name: dry-run software install
+     shell: esxcli software profile update -p {{ profile_res.stdout }} -d /vmfs/volumes/datastore1/{{ patched_file }}
+     register: patch_result
+   - debug:
+      var: patch_result.stdout_lines

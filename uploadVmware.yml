@@ -1,0 +1,87 @@
+---
+- name: GET THE DATASTORE INFO AND STORE TO FILE
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+   - hypervisorVariable
+  tasks:
+  - name: GATHER THE INFORMATION OF THE DATASTORE FROM THE DATACENTER
+    community.vmware.vmware_datastore_info:
+     hostname: "{{ esxi_hostname }}"
+     username: "{{ esxi_username }}"
+     password: "{{ esxi_password }}"
+     datacenter_name: "{{ esxi_datacenter_name }}"
+     validate_certs: no
+     schema: vsphere
+     properties:
+       - name
+    delegate_to: localhost
+    register: datastoreinfo
+
+  - name: CREATE LIST OF DATASTORE FILE - IF EXIST THEN DELETE
+    file:
+     state: absent
+     path: hypdatastore
+
+  - name: CREATE LIST OF DATASTORE FILE - CREATE NEW ONE
+    file:
+     state: touch
+     path: hypdatastore
+
+  - name: DUMP DATASTORES INFORMATION IN THE FILE
+    blockinfile:
+     path: hypdatastore
+     marker: ""
+     insertafter: EOF
+     block: |
+        "{{ item.name }}"
+    loop: "{{ datastoreinfo.datastores }}"
+
+  - name: CLEAN FILE FROM \n and "
+    replace:
+     dest: hypdatastore
+     regexp: '(^\s*$|\n|")'
+     replace: ''
+
+  - name: REMOVE BLANK LINES
+    lineinfile :
+     path: hypdatastore
+     state: absent
+     regexp: '^$'
+
+- name: DISPLAY THE EXISTING DATASTORES INFORMATION AND UPLOAD THE PATCH
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: SHOW THE CONTENT OF THE ABOUT DATASTORE INFO FILE
+    shell: "cat hypdatastore"
+    register: datastore_file_output
+    delegate_to: localhost
+  - name: PRINT CONSOLE
+    debug:
+      msg: "{{ datastore_file_output.stdout_lines }}"
+
+- name: DISPLAY THE EXISTING DATASTORES INFORMATION AND UPLOAD THE PATCH
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+   - hypervisorVariable
+
+  vars_prompt:
+  - name: datastore_nametoload
+    prompt: Which datastore your want to upload the file {Select the above listed}?
+    private: no
+
+  tasks:
+  - name: UPLOAD FILE TO DATASTORE delegate_to
+    community.vmware.vsphere_copy:
+     hostname: "{{ esxi_hostname }}"
+     username: "{{ esxi_username }}"
+     password: "{{ esxi_password }}"
+     validate_certs: no
+     datacenter: ha-datacenter
+     src: "{{src_filePath}}/{{patched_file}}"
+     datastore: "{{datastore_nametoload}}"
+     path: "{{patched_file}}"
+    delegate_to: localhost
+

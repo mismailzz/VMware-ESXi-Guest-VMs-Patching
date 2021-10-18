@@ -1,0 +1,8 @@
+esxi_hostname: "10.12.3.102"
+esxi_username: "root"
+esxi_password: "Gr@v!Tid3@c7ivAt0rs"
+src_filePath: "/root/ansible"
+patched_file: "VMware-VMvisor-Installer-7.0.0.update02-17867351.x86_64-DellEMC_Customized-A04.zip"
+select_datastore: "datastore1"
+esxi_datacenter_name: "ha-datacenter"
+esxi_volumes_path: "/vmfs/volumes/"
