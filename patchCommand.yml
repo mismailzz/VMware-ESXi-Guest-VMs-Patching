@@ -1,4 +1,4 @@
 run_commands:
  - "yum clean all > out.log"
  - "yum repolist >> out.log"
- - "yum --disablerepo=* --enablerepo=wdc* --exclude=puppet* --exclude=dahdi* --exclude=asterisk*  update -y >> out.log 2>&1"
+ - "yum --disablerepo=* --enablerepo=rhel* --exclude=perl* update -y >> out.log 2>&1"
