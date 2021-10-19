@@ -1,4 +1,4 @@
-esxi_hostname: "10.12.3.102"
+esxi_hostname: "192.168.1.43"
 esxi_username: "root"
 esxi_password: "Gr@v!Tid3@c7ivAt0rs"
 src_filePath: "/root/ansible"

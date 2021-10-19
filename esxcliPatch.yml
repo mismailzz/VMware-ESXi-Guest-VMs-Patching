@@ -1,5 +1,5 @@
 ---
-- hosts: ismail
+- hosts: hypervisor
   remote_user: "root"
   gather_facts: no
   vars_files:
