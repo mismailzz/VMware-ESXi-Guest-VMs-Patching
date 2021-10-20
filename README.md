@@ -1,2 +1,1 @@
-This is the test file
-The new line added
+vSmooth is in the development stage. 
